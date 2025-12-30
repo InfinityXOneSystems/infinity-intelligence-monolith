@@ -1,0 +1,48 @@
+{
+  "name": "infinity-intelligence-system",
+  "version": "1.0.0",
+  "description": "Hyperintelligent autonomous intelligence gathering system with vision cortex, universal crawler, AI agents, and full cloud integration",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "deploy": "gcloud run deploy infinity-intelligence --source . --region=us-east1 --project=infinity-x-one-systems --platform=managed --allow-unauthenticated",
+    "auto-build": "npm run build && npm run deploy"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^7.6.0",
+    "@google-cloud/pubsub": "^4.3.0",
+    "@google-cloud/vision": "^4.0.2",
+    "@google-cloud/aiplatform": "^3.15.0",
+    "@google-cloud/text-to-speech": "^5.1.0",
+    "express": "^4.18.2",
+    "axios": "^1.6.2",
+    "cheerio": "^1.0.0-rc.12",
+    "puppeteer": "^21.6.1",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "dotenv": "^16.3.1",
+    "winston": "^3.11.0",
+    "cron": "^3.1.6",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/express": "^4.17.21",
+    "@types/cors": "^2.8.16",
+    "@types/uuid": "^9.0.7",
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.8",
+    "eslint": "^8.55.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.2",
+    "@typescript-eslint/parser": "^6.13.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

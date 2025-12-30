@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  infinity-intelligence:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+      - PORT=8080
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+      - FIRESTORE_COLLECTION=infinity-intelligence-dev
+      - PUBSUB_TOPIC=infinity-intelligence-dev-events
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - firestore-emulator
+      - pubsub-emulator
+
+  firestore-emulator:
+    image: google/cloud-sdk:emulators
+    command: gcloud beta emulators firestore start --host-port=0.0.0.0:8081
+    ports:
+      - "8081:8081"
+    environment:
+      - FIRESTORE_PROJECT_ID=infinity-x-one-systems
+
+  pubsub-emulator:
+    image: google/cloud-sdk:emulators
+    command: gcloud beta emulators pubsub start --host-port=0.0.0.0:8082
+    ports:
+      - "8082:8082"
+    environment:
+      - PUBSUB_PROJECT_ID=infinity-x-one-systems
+
+  crawler:
+    build: .
+    command: npm run crawler
+    environment:
+      - NODE_ENV=development
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+    depends_on:
+      - infinity-intelligence
+
+  agents:
+    build: .
+    command: npm run agents
+    environment:
+      - NODE_ENV=development
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+    depends_on:
+      - infinity-intelligence
+
+  auto-builder:
+    build: .
+    command: npm run auto-builder
+    environment:
+      - NODE_ENV=development
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID}
+    depends_on:
+      - infinity-intelligence
