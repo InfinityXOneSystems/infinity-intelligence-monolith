@@ -6,6 +6,7 @@ import { PubSubService } from '../services/PubSubService';
 import { Logger } from '../utils/Logger';
 import { Config } from '../utils/Config';
 import { VisionCortex } from '../vision-cortex/VisionCortex';
+import { Octokit } from '@octokit/rest';
 
 export class InfinityGateway {
   private app: express.Application;
@@ -15,8 +16,12 @@ export class InfinityGateway {
   private config: Config;
   private visionCortex: VisionCortex;
   private server: any;
+  private octokit: Octokit;
 
   constructor(firestore: FirestoreService, pubsub: PubSubService) {
+    this.octokit = new Octokit({
+      auth: process.env.GITHUB_TOKEN,
+    });
     this.firestore = firestore;
     this.pubsub = pubsub;
     this.logger = new Logger();
@@ -108,7 +113,9 @@ export class InfinityGateway {
     this.app.post('/api/analyze', this.handleAnalyze.bind(this));
     this.app.post('/api/crawl', this.handleCrawl.bind(this));
     this.app.post('/api/build', this.handleBuild.bind(this));
-    this.app.get('/api/intelligence', this.handleGetIntelligence.bind(this));
+    this.app.get("/api/intelligence", this.handleGetIntelligence.bind(this));
+    this.app.get("/admin/github", this.handleAdminGitHub.bind(this));
+    this.app.get("/admin", this.handleAdmin.bind(this));
     this.app.get('/api/leads', this.handleGetLeads.bind(this));
 
     // Universal routing
@@ -209,6 +216,20 @@ export class InfinityGateway {
     } catch (error) {
       this.logger.error('Error getting leads', error);
       res.status(500).json({ error: 'Failed to get leads' });
+    }
+  }
+
+  private async handleAdmin(req: express.Request, res: express.Response): Promise<void> {
+    res.send("Welcome to the Admin Panel!");
+  }
+
+  private async handleAdminGitHub(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const { data: user } = await this.octokit.users.getAuthenticated();
+      res.send(`Admin panel for GitHub user: ${user.login}`);
+    } catch (error) {
+      this.logger.error('Error in handleAdminGitHub', error);
+      res.status(500).send('Error accessing GitHub API');
     }
   }
 
