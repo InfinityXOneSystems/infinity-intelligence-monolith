@@ -6,6 +6,7 @@ import { PubSubService } from '../services/PubSubService';
 import { Logger } from '../utils/Logger';
 import { Config } from '../utils/Config';
 import { VisionCortex } from '../vision-cortex/VisionCortex';
+import { Octokit } from '@octokit/rest';
 
 export class InfinityGateway {
   private app: express.Application;
@@ -15,8 +16,12 @@ export class InfinityGateway {
   private config: Config;
   private visionCortex: VisionCortex;
   private server: any;
+  private octokit: Octokit;
 
   constructor(firestore: FirestoreService, pubsub: PubSubService) {
+    this.octokit = new Octokit({
+      auth: process.env.GITHUB_TOKEN,
+    });
     this.firestore = firestore;
     this.pubsub = pubsub;
     this.logger = new Logger();
@@ -37,6 +42,7 @@ export class InfinityGateway {
     this.app.use(cors());
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
+    this.app.use("/admin", this.authenticateAdmin.bind(this));
 
     // Routes
     this.setupRoutes();
@@ -108,7 +114,11 @@ export class InfinityGateway {
     this.app.post('/api/analyze', this.handleAnalyze.bind(this));
     this.app.post('/api/crawl', this.handleCrawl.bind(this));
     this.app.post('/api/build', this.handleBuild.bind(this));
-    this.app.get('/api/intelligence', this.handleGetIntelligence.bind(this));
+    this.app.get("/api/intelligence", this.handleGetIntelligence.bind(this));
+    this.app.get("/admin", this.handleAdmin.bind(this));
+    this.app.get("/admin/github", this.handleAdminGitHub.bind(this));
+    this.app.get("/admin/firestore", this.handleAdminFirestore.bind(this));
+    this.app.get("/admin/agents", this.handleAdminAgents.bind(this));
     this.app.get('/api/leads', this.handleGetLeads.bind(this));
 
     // Universal routing
@@ -209,6 +219,54 @@ export class InfinityGateway {
     } catch (error) {
       this.logger.error('Error getting leads', error);
       res.status(500).json({ error: 'Failed to get leads' });
+    }
+  }
+
+  private async handleAdmin(req: express.Request, res: express.Response): Promise<void> {
+    res.send("Welcome to the Admin Panel!\nCloud Run Status: Not Implemented Yet");
+  }
+
+  private async handleAdminGitHub(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const { data: user } = await this.octokit.users.getAuthenticated();
+      res.send(`Admin panel for GitHub user: ${user.login}`);
+    } catch (error) {
+      this.logger.error("Error in handleAdminGitHub", error);
+      res.status(500).send("Error accessing GitHub API");
+    }
+  }
+
+  private async handleAdminFirestore(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      const collections = await this.firestore.firestore.listCollections();
+      const collectionIds = collections.map(col => col.id);
+      res.json({ collections: collectionIds });
+    } catch (error) {
+      this.logger.error("Error in handleAdminFirestore", error);
+      res.status(500).send("Error accessing Firestore API");
+    }
+  }
+
+  private async handleAdminAgents(req: express.Request, res: express.Response): Promise<void> {
+    try {
+      // Placeholder for listing agents or agent tasks
+      res.json({ agents: "Agent integration coming soon!" });
+    } catch (error) {
+      this.logger.error("Error in handleAdminAgents", error);
+      res.status(500).send("Error accessing Agents API");
+    }
+  }
+
+  private authenticateAdmin(req: express.Request, res: express.Response, next: express.NextFunction): void {
+    const authToken = req.headers["x-auth-token"];
+    if (!this.config.adminAuthToken) {
+      this.logger.error("ADMIN_AUTH_TOKEN is not set in environment variables.");
+      return res.status(500).send("Server configuration error: ADMIN_AUTH_TOKEN not set.");
+    }
+    if (authToken === this.config.adminAuthToken) {
+      next();
+    } else {
+      res.status(401).send("Unauthorized");
     }
   }
 

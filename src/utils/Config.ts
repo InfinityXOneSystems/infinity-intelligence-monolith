@@ -15,6 +15,7 @@ export class Config {
   public readonly domain: string;
   public readonly githubToken: string;
   public readonly googleWorkspaceDomain: string;
+  public readonly adminAuthToken: string;
 
   constructor() {
     this.port = parseInt(process.env.PORT || '8080', 10);
@@ -29,5 +30,6 @@ export class Config {
     this.domain = process.env.DOMAIN || 'infinityxai.com';
     this.githubToken = process.env.GITHUB_TOKEN || '';
     this.googleWorkspaceDomain = process.env.GOOGLE_WORKSPACE_DOMAIN || 'infinityxai.com';
+    this.adminAuthToken = process.env.ADMIN_AUTH_TOKEN || '';
   }
 }
