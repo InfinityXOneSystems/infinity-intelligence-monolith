@@ -238,8 +238,8 @@ export class InfinityGateway {
 
   private async handleAdminFirestore(req: express.Request, res: express.Response): Promise<void> {
     try {
-      const collections = await this.firestore.firestore.listCollections();
-      const collectionIds = collections.map(col => col.id);
+      const collections = await this.firestore.listAllCollections();
+      const collectionIds = collections.map(col => col);
       res.json({ collections: collectionIds });
     } catch (error) {
       this.logger.error("Error in handleAdminFirestore", error);
@@ -261,7 +261,8 @@ export class InfinityGateway {
     const authToken = req.headers["x-auth-token"];
     if (!this.config.adminAuthToken) {
       this.logger.error("ADMIN_AUTH_TOKEN is not set in environment variables.");
-      return res.status(500).send("Server configuration error: ADMIN_AUTH_TOKEN not set.");
+      res.status(500).send("Server configuration error: ADMIN_AUTH_TOKEN not set.");
+      return;
     }
     if (authToken === this.config.adminAuthToken) {
       next();

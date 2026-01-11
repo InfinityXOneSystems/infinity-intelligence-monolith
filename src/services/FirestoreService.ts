@@ -78,4 +78,14 @@ export class FirestoreService {
       throw error;
     }
   }
+
+  async listAllCollections(): Promise<string[]> {
+    try {
+      const collections = await this.firestore.listCollections();
+      return collections.map(col => col.id);
+    } catch (error) {
+      this.logger.error("Failed to list collections", error);
+      throw error;
+    }
+  }
 }
